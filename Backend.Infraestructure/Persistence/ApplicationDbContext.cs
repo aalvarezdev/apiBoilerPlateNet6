@@ -27,7 +27,7 @@ namespace Backend.Infraestructure.Persistence
         {
             if (!optionsBuilder.IsConfigured)
             {
-                var connString = "Server=(localdb)\\mssqllocaldb;Database=HavenServer;ConnectRetryCount=0;Trusted_Connection=True;MultipleActiveResultSets=true\"";
+                var connString = "";
                 optionsBuilder
                    
                     .EnableSensitiveDataLogging(false)
