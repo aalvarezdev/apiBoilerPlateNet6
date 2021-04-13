@@ -10,6 +10,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Backend.Infraestructure;
+using MediatR;
+using System.Reflection;
+using FluentValidation;
+using Microsoft.OpenApi.Models;
 
 namespace Backend.Api
 {
@@ -25,7 +30,16 @@ namespace Backend.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddMediatR(Assembly.GetExecutingAssembly());          
+            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        
+
+            services.AddInfrastructure(Configuration);
+            services.AddControllers().AddJsonOptions(opts => opts.JsonSerializerOptions.PropertyNamingPolicy = null); //Avoid camelcase Json.
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Backend.Api", Version = "v1" });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

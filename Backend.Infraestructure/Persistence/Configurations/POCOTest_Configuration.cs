@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Backend.Infraestructure.Persistence.Configurations
 {
-   public class POCOTestClassConfiguration : IEntityTypeConfiguration<POCOTestClass>
+   public class POCOTest_Configuration : IEntityTypeConfiguration<POCOTestClass>
     {
         public void Configure(EntityTypeBuilder<POCOTestClass> builder)
         {

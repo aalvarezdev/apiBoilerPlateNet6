@@ -18,9 +18,22 @@ namespace Backend.Infraestructure.Persistence
 
      
 
-        public ApplicationDbContext()
+        public ApplicationDbContext():base()
         {
 
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                var connString = "Server=(localdb)\\mssqllocaldb;Database=HavenServer;ConnectRetryCount=0;Trusted_Connection=True;MultipleActiveResultSets=true\"";
+                optionsBuilder
+                   
+                    .EnableSensitiveDataLogging(false)
+                    .UseSqlServer(connString);
+            }
+            base.OnConfiguring(optionsBuilder);
         }
 
         public ApplicationDbContext(DbContextOptions options):base(options)
@@ -53,7 +66,7 @@ namespace Backend.Infraestructure.Persistence
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
+            
             base.OnModelCreating(builder);
         }
     }
