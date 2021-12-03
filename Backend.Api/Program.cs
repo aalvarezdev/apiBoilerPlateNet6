@@ -25,8 +25,8 @@ namespace Backend.Api
                     webBuilder.UseStartup<Startup>();
                 }).ConfigureAppConfiguration(config => {
 
-                    config.AddJsonFile("appSettings.json")
-                    .AddJsonFile($"appSettings.{environment}.json");
+                    config.AddJsonFile("appSettings.json");
+                  //  .AddJsonFile($"appSettings.{environment}.json");
 
                 });
     }
