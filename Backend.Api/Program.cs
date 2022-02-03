@@ -11,7 +11,7 @@ namespace Backend.Api
 {
     public class Program
     {
-        private static string environment = Backend.Common.EnvironmentSettings.Environment;
+       
 
         public static void Main(string[] args)
         {
@@ -26,7 +26,7 @@ namespace Backend.Api
                 }).ConfigureAppConfiguration(config => {
 
                     config.AddJsonFile("appSettings.json");
-                  //  .AddJsonFile($"appSettings.{environment}.json");
+                 
 
                 });
     }
