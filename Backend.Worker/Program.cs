@@ -11,7 +11,7 @@ using System.Linq;
 using System;
 using Backend.Worker.Models;
 using Backend.Application.Commands;
-
+using Backend.Workers.CustomerWorker;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging((context, builder) =>
