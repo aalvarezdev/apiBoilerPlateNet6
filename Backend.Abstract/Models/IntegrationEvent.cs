@@ -8,13 +8,13 @@ namespace Backend.Abstract.Models
 {
     public record IntegrationEvent
     {
-        public IntegrationEvent()
+        public IntegrationEvent(string message)
         {
             Id = Guid.NewGuid();
             CreationDate = DateTime.UtcNow;
         }
      
-        public IntegrationEvent(Guid id, DateTime createDate)
+        public IntegrationEvent(string message, Guid id, DateTime createDate)
         {
             Id = id;
             CreationDate = createDate;

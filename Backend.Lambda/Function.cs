@@ -1,7 +1,13 @@
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SNSEvents;
+using Backend.Abstract.Models;
+using Backend.Abstract.ServiceBus;
+using Backend.Application.Commands;
 using Backend.Application.Interfaces;
+using Backend.Infraestructure.ServiceBus;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using static Amazon.Lambda.SNSEvents.SNSEvent;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -18,14 +24,15 @@ public class Function
     /// </summary>ç
     /// 
  
-    private ILambdaConfiguration Configuration { get; }
-
+    private ILambdaConfiguration _configuratoin { get; }
+    private IMediator _mediator;
     public Function()
     {
         var serviceCollection = new ServiceCollection();
         ConfigureServices(serviceCollection);
         var serviceProvider = serviceCollection.BuildServiceProvider();
-        this.Configuration = serviceProvider.GetService<ILambdaConfiguration>();
+        this._configuratoin = serviceProvider.GetService<ILambdaConfiguration>();
+        this._mediator = serviceProvider.GetService<IMediator>();
     }
 
 
@@ -38,23 +45,21 @@ public class Function
     /// <returns></returns>
     public async Task FunctionHandler(SNSEvent evnt, ILambdaContext context)
     {
-        foreach(var record in evnt.Records)
+        foreach(SNSRecord record in evnt.Records)
         {
-            await ProcessRecordAsync(record, context);
+            IntegrationEvent integrationEvent = new IntegrationEvent(record.Sns?.Message);
+            SendMessageCommand command = new SendMessageCommand() { IntegrationEvent = integrationEvent };
+            await _mediator.Send(command, new CancellationToken());
         }
     }
 
-    private async Task ProcessRecordAsync(SNSEvent.SNSRecord record, ILambdaContext context)
+   
+
+
+    private void ConfigureServices(IServiceCollection services)
     {
-        context.Logger.LogInformation($"Processed record {record.Sns.Message}");
-
-        // TODO: Do interesting work based on the new message
-        await Task.CompletedTask;
-    }
-
-
-    private void ConfigureServices(IServiceCollection serviceCollection)
-    {
-        serviceCollection.AddTransient<ILambdaConfiguration, FunctionConfiguration>();
+        services.AddTransient<ILambdaConfiguration, FunctionConfiguration>();
+        services.AddMediatR(typeof(SendMessageCommand));
+        services.AddTransient<IServiceBus, AzureServiceBus>();
     }
 }
