@@ -24,14 +24,24 @@ public class Function
     /// </summary>ç
     /// 
  
-    private ILambdaConfiguration _configuratoin { get; }
+   
     private IMediator _mediator;
+
+
+    /// <summary>
+    /// This constructor is for unit testing only. Amazon will call the parameterless constructor by default;
+    /// </summary>
+    /// <param name="mediator"></param>
+    public Function(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
     public Function()
     {
         var serviceCollection = new ServiceCollection();
         ConfigureServices(serviceCollection);
-        var serviceProvider = serviceCollection.BuildServiceProvider();
-        this._configuratoin = serviceProvider.GetService<ILambdaConfiguration>();
+        var serviceProvider = serviceCollection.BuildServiceProvider();        
         this._mediator = serviceProvider.GetService<IMediator>();
     }
 
