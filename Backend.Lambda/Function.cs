@@ -5,15 +5,19 @@ using Backend.Abstract.ServiceBus;
 using Backend.Application.Commands;
 using Backend.Application.Interfaces;
 using Backend.Infraestructure.ServiceBus;
+using BackendLambda;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using static Amazon.Lambda.SNSEvents.SNSEvent;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace Backend.Lambda;
+namespace BackendLambda;
 
 public class Function
 {
@@ -23,10 +27,10 @@ public class Function
     /// region the Lambda function is executed in.
     /// </summary>ç
     /// 
- 
-   
-    private IMediator _mediator;
 
+
+    private IMediator _mediator;
+    private ServiceCollection _services;
 
     /// <summary>
     /// This constructor is for unit testing only. Amazon will call the parameterless constructor by default;
@@ -39,9 +43,9 @@ public class Function
 
     public Function()
     {
-        var serviceCollection = new ServiceCollection();
-        ConfigureServices(serviceCollection);
-        var serviceProvider = serviceCollection.BuildServiceProvider();        
+        _services = new ServiceCollection();
+        ConfigureServices(_services);
+        var serviceProvider = _services.BuildServiceProvider();
         this._mediator = serviceProvider.GetService<IMediator>();
     }
 
@@ -55,21 +59,28 @@ public class Function
     /// <returns></returns>
     public async Task FunctionHandler(SNSEvent evnt, ILambdaContext context)
     {
-        foreach(SNSRecord record in evnt.Records)
+        foreach (SNSRecord record in evnt.Records)
         {
+            Console.WriteLine($"Incoming value :  {record.Sns?.Message}");
             IntegrationEvent integrationEvent = new IntegrationEvent(record.Sns?.Message);
+            Console.WriteLine("Attempting to send message");          
             SendMessageCommand command = new SendMessageCommand() { IntegrationEvent = integrationEvent };
             await _mediator.Send(command, new CancellationToken());
         }
     }
 
-   
-
-
     private void ConfigureServices(IServiceCollection services)
     {
-        services.AddTransient<ILambdaConfiguration, FunctionConfiguration>();
-        services.AddMediatR(typeof(SendMessageCommand));
+
+        IConfiguration configuration = new ConfigurationBuilder()
+              .SetBasePath(Directory.GetCurrentDirectory())
+              .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+              .Build();
+
+        services.AddScoped<IConfiguration>(_ => configuration);
+        //services.AddSingleton<ILambdaConfiguration, FunctionConfiguration>();
+        services.AddLogging(config => config.AddConsole());
         services.AddTransient<IServiceBus, AzureServiceBus>();
+        services.AddMediatR(typeof(SendMessageCommandHandler).Assembly);
     }
 }

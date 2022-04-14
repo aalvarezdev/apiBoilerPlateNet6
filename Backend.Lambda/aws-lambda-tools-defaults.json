@@ -11,6 +11,6 @@
   "package-type": "image",
   "function-memory-size": 256,
   "function-timeout": 30,
-  "image-command": "AWSLambda1::AWSLambda1.Function::FunctionHandler",
+  "image-command": "BackendLambda::BackendLambda.Function::FunctionHandler",
   "docker-host-build-output-dir": "./bin/Release/lambda-publish"
 }

@@ -15,10 +15,10 @@ namespace Lambda.Tests
         public async Task SendMessage()
         {
             //Arrange
+         
             var _ILogger = new Mock<ILogger<SendMessageCommandHandler>>();
             var _IServiceBus = new Mock<IServiceBus>();
-
-            _ILogger.Setup(x => x.LogError(It.IsAny<Exception>(), It.IsAny<string>())).Verifiable();
+          
             _IServiceBus.Setup(x => x.Publish(It.IsAny<IntegrationEvent>()));
 
             var command = new SendMessageCommand() { IntegrationEvent = new IntegrationEvent("Service Bus Message") };

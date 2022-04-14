@@ -12,14 +12,10 @@ namespace Backend.Abstract.Models
         {
             Id = Guid.NewGuid();
             CreationDate = DateTime.UtcNow;
+            this.Message = message;
         }
      
-        public IntegrationEvent(string message, Guid id, DateTime createDate)
-        {
-            Id = id;
-            CreationDate = createDate;
-        }
-
+     
         public Guid Id { get; private init; }
 
       

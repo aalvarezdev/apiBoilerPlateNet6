@@ -22,7 +22,7 @@ namespace Lambda.Tests
 
             _iMediator.Setup(x => x.Send(It.IsAny<object>(), It.IsAny<CancellationToken>())).Verifiable();
 
-            var function = new Backend.Lambda.Function(_iMediator.Object);
+            var function = new BackendLambda.Function(_iMediator.Object);
             bool result = false;
             try
             {

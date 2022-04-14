@@ -6,13 +6,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Backend.Lambda
+namespace BackendLambda
 {
     public class FunctionConfiguration : ILambdaConfiguration
     {
         public IConfiguration Configuration => new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                  
                 .Build();
 
 

@@ -26,7 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Backend.Abstract\Backend.Abstract.csproj" />
     <ProjectReference Include="..\Backend.Application\Backend.Application.csproj" />
-    <ProjectReference Include="..\Backend.Lambda\Backend.Lambda.csproj" />
+    <ProjectReference Include="..\Backend.Lambda\BackendLambda.csproj" />
   </ItemGroup>
 
 </Project>
