@@ -1,5 +1,0 @@
-﻿Point to Api Project
-Install-Package Microsoft.EntityFrameworkCore.Tools
-dotnet tool update --global dotnet-ef
-dotnet ef migrations add InitialCreate --project Backend.Infraestructure
-dotnet ef database update --project Backend.Infraestructure

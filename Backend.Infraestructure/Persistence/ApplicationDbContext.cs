@@ -7,16 +7,17 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using System;
 using Backend.Application.Interfaces;
+using Backend.Models;
 
-namespace Backend.Infraestructure.Persistence
+namespace Backend.Infrastructure.Persistence
 {
-    public class ApplicationDbContext : DbContext, IApplicationDbContext
+    public class ApplicationDbContext : DbContext
     {
         
         
         public DatabaseFacade Facade => this.Database;
 
-     
+        public DbSet<DummyDbClass> DummyDbClass { get; set; }
 
         public ApplicationDbContext():base()
         {
@@ -41,28 +42,8 @@ namespace Backend.Infraestructure.Persistence
            // _currentUserService = currentUserService;
            // _dateTime = dateTime;
         }
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
-        {
-            //foreach (var entry in ChangeTracker.Entries<AuditableEntity>())
-            //{
-            //    switch (entry.State)
-            //    {
-            //        case EntityState.Added:
-            //            entry.Entity.CreatedBy = "";// _currentUserService.UserId;
-            //            entry.Entity.Created = DateTime.Now;
-            //            break;
-            //        case EntityState.Modified:
-            //            entry.Entity.LastModifiedBy = ""; //_currentUserService.UserId;
-            //            entry.Entity.LastModified = DateTime.Now;
-            //            break;
-            //    }
-            //}
 
-            var response = await base.SaveChangesAsync(cancellationToken);
-
-            return response;
-
-        }
+        
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());

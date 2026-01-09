@@ -18,8 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Backend.Application\Backend.Application.csproj" />
     <ProjectReference Include="..\Backend.Common\Backend.Common.csproj" />
-    <ProjectReference Include="..\Backend.Infraestructure\Backend.Infraestructure.csproj" />
-    <ProjectReference Include="..\Backend.Worker\Backend.Worker.csproj" />
+    <ProjectReference Include="..\Backend.Infraestructure\Backend.Infrastructure.csproj" />
   </ItemGroup>
 
 

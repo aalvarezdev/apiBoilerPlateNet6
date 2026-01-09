@@ -10,12 +10,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Backend.Infraestructure;
 using MediatR;
 using System.Reflection;
 using FluentValidation;
 using Microsoft.OpenApi.Models;
-
+using Backend.Infrastructure;
 namespace Backend.Api
 {
     public class Startup

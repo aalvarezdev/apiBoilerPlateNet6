@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Backend.Infraestructure.Persistence.Configurations
+namespace Backend.Models
 {
-   public class POCOTestClass
+   public class DummyDbClass
     {
         public int PocoID { get; set; }
 
