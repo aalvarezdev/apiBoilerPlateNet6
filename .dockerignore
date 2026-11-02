@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+.git/
+.vs/
+AGENT_HANDOFF.md
+Backend.Lambda/
+Backend.Worker/
+Lambda.Tests/
