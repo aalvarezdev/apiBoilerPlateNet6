@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Reflection;
 using FluentValidation;
+using Backend.Application.Interfaces;
+using Backend.Application.Services;
 using Backend.Infrastructure;
 using Microsoft.OpenApi;
 namespace Backend.Api
@@ -27,6 +29,7 @@ namespace Backend.Api
         
 
             services.AddInfrastructure(Configuration);
+            services.AddScoped<IDummyService, DummyService>();
             services.AddControllers().AddJsonOptions(opts => opts.JsonSerializerOptions.PropertyNamingPolicy = null); //Avoid camelcase Json.
             services.AddSwaggerGen(c =>
             {

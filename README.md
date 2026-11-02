@@ -1,4 +1,23 @@
-I have designed and implemented a comprehensive backend solution that facilitates database support within a completely decoupled architecture. The system's Web API maintains agnosticism from both the Application Core and the Database by interfacing with them, ensuring total decoupling from all other system components.
+# API Boilerplate (.NET 10)
+
+Placeholder API used for CI/CD exercises. The runnable solution targets .NET 10 and exposes a deterministic endpoint without needing a database or cloud credentials:
+
+```text
+GET /api/dummies
+```
+
+It returns three sample objects (`PocoID` and `POCODescription`) and has a unit test in `Backend.Api.Tests`.
+
+## Run locally
+
+```bash
+dotnet restore Backend.sln
+dotnet run --project Backend.Api
+```
+
+Browse to `http://localhost:5000/api/dummies` (or the HTTPS URL shown by `dotnet run`). Run the test suite with `dotnet test Backend.sln`.
+
+## Architecture
 
 Backend.Application - Class Library
 

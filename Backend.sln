@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{27E50473-8F0
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backend.Api", "Backend.Api\Backend.Api.csproj", "{C0841998-CA4A-443B-BB3A-57B5C948FA66}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backend.Api.Tests", "Backend.Api.Tests\Backend.Api.Tests.csproj", "{5B9C9EF8-4163-4C01-BD8A-BC9D06C99B31}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Backend.Common", "Backend.Common\Backend.Common.csproj", "{2B8FE923-44C7-497C-864F-63CC5317E61E}"
 EndProject
 Global
@@ -39,6 +41,10 @@ Global
 		{C0841998-CA4A-443B-BB3A-57B5C948FA66}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0841998-CA4A-443B-BB3A-57B5C948FA66}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0841998-CA4A-443B-BB3A-57B5C948FA66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B9C9EF8-4163-4C01-BD8A-BC9D06C99B31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B9C9EF8-4163-4C01-BD8A-BC9D06C99B31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B9C9EF8-4163-4C01-BD8A-BC9D06C99B31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B9C9EF8-4163-4C01-BD8A-BC9D06C99B31}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2B8FE923-44C7-497C-864F-63CC5317E61E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2B8FE923-44C7-497C-864F-63CC5317E61E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B8FE923-44C7-497C-864F-63CC5317E61E}.Release|Any CPU.ActiveCfg = Release|Any CPU

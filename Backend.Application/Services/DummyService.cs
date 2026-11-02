@@ -1,9 +1,6 @@
 ﻿using Backend.Application.Interfaces;
 using Backend.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Backend.Application.Services
@@ -14,6 +11,18 @@ namespace Backend.Application.Services
         {
             // Simulate async data fetching
             return await Task.FromResult(new DummyDbClass { PocoID = 1, POCODescription = "Dummy Data" });
+        }
+
+        public Task<IReadOnlyCollection<DummyDbClass>> GetDummyCollectionAsync()
+        {
+            IReadOnlyCollection<DummyDbClass> items = new[]
+            {
+                new DummyDbClass { PocoID = 1, POCODescription = "First sample item" },
+                new DummyDbClass { PocoID = 2, POCODescription = "Second sample item" },
+                new DummyDbClass { PocoID = 3, POCODescription = "Third sample item" }
+            };
+
+            return Task.FromResult(items);
         }
     }
 }
