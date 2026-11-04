@@ -1,0 +1,32 @@
+pipeline:
+  name: API PR validation
+  identifier: api_pr_validation
+  orgIdentifier: default
+  projectIdentifier: harness_lab
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: github_api_boilerplate
+        build: <+input>
+  stages:
+    - stage:
+        name: Build y pruebas de PR
+        identifier: pr_build_test
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  name: Compilar y probar
+                  identifier: dotnet_test
+                  template:
+                    templateRef: dotnet_restore_build_test
+                    versionLabel: "1.0.0"

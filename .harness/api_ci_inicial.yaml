@@ -1,0 +1,128 @@
+pipeline:
+  name: API CI inicial
+  identifier: api_ci_inicial
+  projectIdentifier: harness_lab
+  orgIdentifier: default
+  tags: {}
+  properties:
+    ci:
+      codebase:
+        connectorRef: github_api_boilerplate
+        build: <+input>
+  stages:
+    - stage:
+        name: Build y pruebas
+        identifier: build_test
+        type: CI
+        spec:
+          cloneCodebase: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - step:
+                  type: Run
+                  name: Compilar y probar
+                  identifier: clone_test
+                  spec:
+                    shell: Bash
+                    command: |-
+                      set -euo pipefail
+                      git rev-parse HEAD
+                      if ! dotnet --list-sdks | grep -q '^10\.'; then
+                        curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0
+                        export PATH="$HOME/.dotnet:$PATH"
+                      fi
+                      dotnet --version
+                      dotnet restore Backend.sln
+                      dotnet build Backend.sln -c Release --no-restore
+                      dotnet test Backend.sln -c Release --no-build --no-restore
+              - step:
+                  type: Run
+                  name: Construir imagen
+                  identifier: build_image
+                  spec:
+                    shell: Bash
+                    command: |-
+                      set -euo pipefail
+                      docker build -f Backend.Api/Dockerfile -t harness-lab-api:<+codebase.commitSha> .
+                      docker image inspect harness-lab-api:<+codebase.commitSha> --format '{{.Id}}'
+              - step:
+                  type: Run
+                  name: Publicar imagen en ACR
+                  identifier: publish_image
+                  spec:
+                    shell: Bash
+                    envVariables:
+                      ACR_CLIENT_ID: <+secrets.getValue("acr_push_client_id")>
+                      ACR_CLIENT_SECRET: <+secrets.getValue("acr_push_client_secret")>
+                    command: |-
+                      set -euo pipefail
+                      sha="<+codebase.commitSha>"
+                      test "$sha" = "$(git rev-parse HEAD)"
+                      image="acrharnesslabalvarez26.azurecr.io/harness-lab-api:$sha"
+                      printf '%s' "$ACR_CLIENT_SECRET" | docker login acrharnesslabalvarez26.azurecr.io --username "$ACR_CLIENT_ID" --password-stdin
+                      if docker manifest inspect "$image" >/dev/null 2>&1; then
+                        echo "Commit tag already exists; reusing the published image"
+                      else
+                        docker tag "harness-lab-api:$sha" "$image"
+                        docker push "$image"
+                      fi
+                      docker logout acrharnesslabalvarez26.azurecr.io
+              - step:
+                  type: Run
+                  name: Verificar y bloquear imagen
+                  identifier: lock_image
+                  spec:
+                    image: mcr.microsoft.com/azure-cli@sha256:a4e2660b4099b76f02001a9316a0eb0dc56e330b5f7d1d1312c932200645bf26
+                    shell: Bash
+                    envVariables:
+                      ACR_CLIENT_ID: <+secrets.getValue("acr_push_client_id")>
+                      ACR_CLIENT_SECRET: <+secrets.getValue("acr_push_client_secret")>
+                    command: |-
+                      set -euo pipefail
+                      sha="<+codebase.commitSha>"
+                      image="harness-lab-api:$sha"
+                      az login --service-principal --username "$ACR_CLIENT_ID" --password "$ACR_CLIENT_SECRET" --tenant e0e40cd0-d97b-4524-823d-d71f5ee37563 --output none
+                      write_enabled=$(az acr repository show --name acrharnesslabalvarez26 --image "$image" --query changeableAttributes.writeEnabled --output tsv)
+                      if [ "$write_enabled" != "false" ]; then
+                        az acr repository update --name acrharnesslabalvarez26 --image "$image" --write-enabled false --delete-enabled false --output none
+                      fi
+                      az acr repository show --name acrharnesslabalvarez26 --image "$image" --output json | python3 -c 'import json,re,sys; d=json.load(sys.stdin); digest=d["digest"]; flags=d["changeableAttributes"]; assert re.fullmatch(r"sha256:[0-9a-f]{64}", digest); assert flags["writeEnabled"] is False and flags["deleteEnabled"] is False; print("Verified immutable image: acrharnesslabalvarez26.azurecr.io/harness-lab-api@"+digest)'
+              - step:
+                  type: Run
+                  name: Desplegar digest en development
+                  identifier: deploy_development
+                  spec:
+                    image: mcr.microsoft.com/azure-cli@sha256:a4e2660b4099b76f02001a9316a0eb0dc56e330b5f7d1d1312c932200645bf26
+                    shell: Bash
+                    envVariables:
+                      ACR_CLIENT_ID: <+secrets.getValue("acr_push_client_id")>
+                      ACR_CLIENT_SECRET: <+secrets.getValue("acr_push_client_secret")>
+                      KUBECONFIG_B64: <+secrets.getValue("aks_development_kubeconfig_b64")>
+                    command: |-
+                      set -euo pipefail
+                      sha="<+codebase.commitSha>"
+                      az login --service-principal --username "$ACR_CLIENT_ID" --password "$ACR_CLIENT_SECRET" --tenant e0e40cd0-d97b-4524-823d-d71f5ee37563 --output none
+                      image_json=$(az acr repository show --name acrharnesslabalvarez26 --image "harness-lab-api:$sha" --output json)
+                      digest=$(printf '%s' "$image_json" | python3 -c 'import json,re,sys; d=json.load(sys.stdin); f=d["changeableAttributes"]; x=d["digest"]; assert re.fullmatch(r"sha256:[0-9a-f]{64}",x); assert f["writeEnabled"] is False and f["deleteEnabled"] is False; print(x)')
+                      image="acrharnesslabalvarez26.azurecr.io/harness-lab-api@$digest"
+                      export KUBECONFIG="$(mktemp)"
+                      trap 'rm -f "$KUBECONFIG" ./kubectl ./kubectl.sha256 ./development.rendered.yaml' EXIT
+                      printf '%s' "$KUBECONFIG_B64" | base64 -d > "$KUBECONFIG"
+                      chmod 600 "$KUBECONFIG"
+                      curl -fsSLo ./kubectl https://dl.k8s.io/release/v1.36.4/bin/linux/amd64/kubectl
+                      curl -fsSLo ./kubectl.sha256 https://dl.k8s.io/release/v1.36.4/bin/linux/amd64/kubectl.sha256
+                      printf '%s  %s\n' "$(cat ./kubectl.sha256)" ./kubectl | sha256sum -c -
+                      chmod +x ./kubectl
+                      sed "s#IMAGE_DIGEST#$image#g" k8s/development.yaml > ./development.rendered.yaml
+                      ./kubectl apply -f ./development.rendered.yaml
+                      ./kubectl rollout status deployment/harness-lab-api -n development --timeout=180s
+                      actual=$(./kubectl get deployment harness-lab-api -n development -o jsonpath='{.spec.template.spec.containers[0].image}')
+                      test "$actual" = "$image"
+                      ./kubectl get pods -n development -l app=harness-lab-api
+                      echo "Deployed $image to development"
