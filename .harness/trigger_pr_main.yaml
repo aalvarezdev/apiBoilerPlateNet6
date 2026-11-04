@@ -1,0 +1,37 @@
+trigger:
+  name: PR a main
+  identifier: pr_main
+  enabled: true
+  encryptedWebhookSecretIdentifier: ""
+  orgIdentifier: default
+  projectIdentifier: harness_lab
+  pipelineIdentifier: api_pr_validation
+  source:
+    type: Webhook
+    spec:
+      type: Github
+      spec:
+        type: PullRequest
+        spec:
+          connectorRef: github_api_boilerplate
+          autoAbortPreviousExecutions: true
+          actions:
+            - Open
+            - Reopen
+            - Synchronize
+          payloadConditions:
+            - key: targetBranch
+              operator: Equals
+              value: main
+          headerConditions: []
+          jexlCondition: ""
+  inputYaml: |
+    pipeline:
+      identifier: api_pr_validation
+      properties:
+        ci:
+          codebase:
+            build:
+              type: branch
+              spec:
+                branch: <+trigger.sourceBranch>
