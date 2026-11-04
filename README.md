@@ -28,6 +28,8 @@ docker run --rm -p 8080:8080 api-boilerplate:local
 
 The endpoint is available at `http://localhost:8080/api/dummies`.
 
+`GET /api/version` returns `Version`, `Commit`, `BuildNumber`, `ExecutionId`, and `PipelineUrl` so a running deployment can be matched to its Harness build. Harness bakes this metadata into the container image; promotions retain the original build information. Local builds report `local` unless the `BUILD_COMMIT`, `BUILD_NUMBER`, `BUILD_EXECUTION_ID`, and `BUILD_PIPELINE_URL` settings are supplied.
+
 ## CI artifact
 
 Harness CI builds and tests `Backend.sln`, then publishes `Backend.Api` to Azure Container Registry using the full Git commit SHA as its image tag. A successful run verifies the registry digest and locks that image against updates and deletion. Deployment should reference the verified digest so every environment uses the same build.

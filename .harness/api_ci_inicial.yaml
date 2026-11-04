@@ -53,7 +53,7 @@ pipeline:
                     shell: Bash
                     command: |-
                       set -euo pipefail
-                      docker build -f Backend.Api/Dockerfile -t harness-lab-api:<+codebase.commitSha> .
+                      docker build -f Backend.Api/Dockerfile --build-arg BUILD_COMMIT="<+codebase.commitSha>" --build-arg BUILD_NUMBER="<+pipeline.sequenceId>" --build-arg BUILD_EXECUTION_ID="<+pipeline.executionId>" --build-arg BUILD_PIPELINE_URL="<+pipeline.executionUrl>" -t harness-lab-api:<+codebase.commitSha> .
                       docker image inspect harness-lab-api:<+codebase.commitSha> --format '{{.Id}}'
               - step:
                   type: Run
@@ -188,6 +188,14 @@ pipeline:
                       rows = json.load(open(sys.argv[1]))
                       assert isinstance(rows, list) and rows
                       assert all('PocoID' in row and 'POCODescription' in row for row in rows)
+                      PY
+                      curl --fail --silent --show-error --retry 6 --retry-all-errors --retry-delay 10 --max-time 60 "https://api-harness-demo.calmocean-ef804483.southcentralus.azurecontainerapps.io/api/version" > "$work_dir/version.json"
+                      python3 - "$work_dir/version.json" <<'PY'
+                      import json, os, sys
+                      version = json.load(open(sys.argv[1]))
+                      assert version['Commit'] == os.environ['DEPLOY_SHA'], version
+                      assert version['BuildNumber'] and version['ExecutionId'] and version['PipelineUrl'].startswith('https://app.harness.io/'), version
+                      print(json.dumps(version, indent=2))
                       PY
                       echo "Website verified: $endpoint"
                       echo "Deployed commit $sha with image $DEPLOY_IMAGE"
