@@ -11,7 +11,7 @@ pipeline:
         build: <+input>
   stages:
     - stage:
-        name: Build y pruebas de PR
+        name: PR build and tests
         identifier: pr_build_test
         type: CI
         spec:
@@ -25,7 +25,7 @@ pipeline:
           execution:
             steps:
               - step:
-                  name: Compilar y probar
+                  name: Build and test
                   identifier: dotnet_test
                   template:
                     templateRef: dotnet_restore_build_test

@@ -1,5 +1,5 @@
 pipeline:
-  name: API CI inicial
+  name: API CI
   identifier: api_ci_inicial
   projectIdentifier: harness_lab
   orgIdentifier: default
@@ -15,7 +15,7 @@ pipeline:
       value: development
   stages:
     - stage:
-        name: Build y pruebas
+        name: Build and tests
         identifier: build_test
         type: CI
         spec:
@@ -30,7 +30,7 @@ pipeline:
             steps:
               - step:
                   type: Run
-                  name: Compilar y probar
+                  name: Build and test
                   identifier: clone_test
                   spec:
                     shell: Bash
@@ -47,7 +47,7 @@ pipeline:
                       dotnet test Backend.sln -c Release --no-build --no-restore
               - step:
                   type: Run
-                  name: Construir imagen
+                  name: Build image
                   identifier: build_image
                   spec:
                     shell: Bash
@@ -57,7 +57,7 @@ pipeline:
                       docker image inspect harness-lab-api:<+codebase.commitSha> --format '{{.Id}}'
               - step:
                   type: Run
-                  name: Publicar imagen en ACR
+                  name: Publish image to ACR
                   identifier: publish_image
                   spec:
                     shell: Bash
@@ -79,7 +79,7 @@ pipeline:
                       docker logout acrharnesslabalvarez26.azurecr.io
               - step:
                   type: Run
-                  name: Verificar y bloquear imagen
+                  name: Verify and lock image
                   identifier: lock_image
                   spec:
                     image: mcr.microsoft.com/azure-cli@sha256:a4e2660b4099b76f02001a9316a0eb0dc56e330b5f7d1d1312c932200645bf26
@@ -99,7 +99,7 @@ pipeline:
                       az acr repository show --name acrharnesslabalvarez26 --image "$image" --output json | python3 -c 'import json,re,sys; d=json.load(sys.stdin); digest=d["digest"]; flags=d["changeableAttributes"]; assert re.fullmatch(r"sha256:[0-9a-f]{64}", digest); assert flags["writeEnabled"] is False and flags["deleteEnabled"] is False; print("Verified immutable image: acrharnesslabalvarez26.azurecr.io/harness-lab-api@"+digest)'
               - step:
                   type: Run
-                  name: Desplegar digest en development
+                  name: Deploy digest to development
                   identifier: deploy_development
                   spec:
                     image: mcr.microsoft.com/azure-cli@sha256:a4e2660b4099b76f02001a9316a0eb0dc56e330b5f7d1d1312c932200645bf26
@@ -132,3 +132,62 @@ pipeline:
                       test "$actual" = "$image"
                       ./kubectl get pods -n "$namespace" -l app=harness-lab-api
                       echo "Deployed $image to $namespace"
+              - step:
+                  type: Run
+                  name: Deploy digest to public website
+                  identifier: deploy_website
+                  spec:
+                    image: mcr.microsoft.com/azure-cli@sha256:a4e2660b4099b76f02001a9316a0eb0dc56e330b5f7d1d1312c932200645bf26
+                    shell: Bash
+                    envVariables:
+                      ACR_CLIENT_ID: <+secrets.getValue("acr_push_client_id")>
+                      ACR_CLIENT_SECRET: <+secrets.getValue("acr_push_client_secret")>
+                    command: |-
+                      set -euo pipefail
+                      sha="<+codebase.commitSha>"
+                      az login --service-principal --username "$ACR_CLIENT_ID" --password "$ACR_CLIENT_SECRET" --tenant e0e40cd0-d97b-4524-823d-d71f5ee37563 --output none
+                      az account set --subscription d1aa0d0f-ac2a-46f7-ac25-aab69f19a0ca
+                      image_json=$(az acr repository show --name acrharnesslabalvarez26 --image "harness-lab-api:$sha" --output json)
+                      digest=$(printf '%s' "$image_json" | python3 -c 'import json,re,sys; d=json.load(sys.stdin); f=d["changeableAttributes"]; x=d["digest"]; assert re.fullmatch(r"sha256:[0-9a-f]{64}",x); assert f["writeEnabled"] is False and f["deleteEnabled"] is False; print(x)')
+                      export DEPLOY_IMAGE="acrharnesslabalvarez26.azurecr.io/harness-lab-api@$digest"
+                      export DEPLOY_SHA="$sha"
+                      app_url="https://management.azure.com/subscriptions/d1aa0d0f-ac2a-46f7-ac25-aab69f19a0ca/resourceGroups/rg-harness-lab-20261104/providers/Microsoft.App/containerApps/api-harness-demo?api-version=2025-07-01"
+                      work_dir=$(mktemp -d)
+                      trap 'rm -rf "$work_dir"' EXIT
+                      az rest --method get --url "$app_url" > "$work_dir/before.json"
+                      python3 - "$work_dir" <<'PY'
+                      import json, os, pathlib, sys
+                      root = pathlib.Path(sys.argv[1])
+                      app = json.loads((root / 'before.json').read_text())
+                      template = app['properties']['template']
+                      assert len(template['containers']) == 1
+                      template['containers'][0]['image'] = os.environ['DEPLOY_IMAGE']
+                      template['revisionSuffix'] = os.environ['DEPLOY_SHA'][:12]
+                      (root / 'update.json').write_text(json.dumps({'properties': {'template': template}}))
+                      PY
+                      az rest --method patch --url "$app_url" --body "@$work_dir/update.json" --output none
+                      ready=false
+                      for attempt in $(seq 1 60); do
+                        az rest --method get --url "$app_url" > "$work_dir/after.json"
+                        if python3 - "$work_dir/after.json" <<'PY'
+                      import json, os, sys
+                      p = json.load(open(sys.argv[1]))['properties']
+                      assert p['provisioningState'] == 'Succeeded'
+                      assert p['template']['containers'][0]['image'] == os.environ['DEPLOY_IMAGE']
+                      assert p['latestReadyRevisionName'] == p['latestRevisionName']
+                      assert p['latestRevisionName'].endswith('--' + os.environ['DEPLOY_SHA'][:12])
+                      PY
+                        then ready=true; break; fi
+                        sleep 10
+                      done
+                      test "$ready" = true
+                      endpoint="https://api-harness-demo.calmocean-ef804483.southcentralus.azurecontainerapps.io/api/dummies"
+                      curl --fail --silent --show-error --retry 6 --retry-all-errors --retry-delay 10 --max-time 60 "$endpoint" > "$work_dir/response.json"
+                      python3 - "$work_dir/response.json" <<'PY'
+                      import json, sys
+                      rows = json.load(open(sys.argv[1]))
+                      assert isinstance(rows, list) and rows
+                      assert all('PocoID' in row and 'POCODescription' in row for row in rows)
+                      PY
+                      echo "Website verified: $endpoint"
+                      echo "Deployed commit $sha with image $DEPLOY_IMAGE"
