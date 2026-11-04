@@ -17,6 +17,17 @@ dotnet run --project Backend.Api
 
 Browse to `http://localhost:5000/api/dummies` (or the HTTPS URL shown by `dotnet run`). Run the test suite with `dotnet test Backend.sln`.
 
+## Run in Docker
+
+From the repository root:
+
+```bash
+docker build -f Backend.Api/Dockerfile -t api-boilerplate:local .
+docker run --rm -p 8080:8080 api-boilerplate:local
+```
+
+The endpoint is available at `http://localhost:8080/api/dummies`.
+
 ## Architecture
 
 Backend.Application - Class Library
