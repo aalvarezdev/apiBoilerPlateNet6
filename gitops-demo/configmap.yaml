@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: delivery-model
+  namespace: gitops-demo
+data:
+  owner: argocd
+  purpose: demonstrate-git-reconciliation
+  release: "1"
