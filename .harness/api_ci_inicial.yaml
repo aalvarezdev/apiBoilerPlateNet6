@@ -9,6 +9,10 @@ pipeline:
       codebase:
         connectorRef: github_api_boilerplate
         build: <+input>
+  variables:
+    - name: deployment_namespace
+      type: String
+      value: development
   stages:
     - stage:
         name: Build y pruebas
@@ -107,6 +111,8 @@ pipeline:
                     command: |-
                       set -euo pipefail
                       sha="<+codebase.commitSha>"
+                      namespace="<+pipeline.variables.deployment_namespace>"
+                      test "$namespace" = development
                       az login --service-principal --username "$ACR_CLIENT_ID" --password "$ACR_CLIENT_SECRET" --tenant e0e40cd0-d97b-4524-823d-d71f5ee37563 --output none
                       image_json=$(az acr repository show --name acrharnesslabalvarez26 --image "harness-lab-api:$sha" --output json)
                       digest=$(printf '%s' "$image_json" | python3 -c 'import json,re,sys; d=json.load(sys.stdin); f=d["changeableAttributes"]; x=d["digest"]; assert re.fullmatch(r"sha256:[0-9a-f]{64}",x); assert f["writeEnabled"] is False and f["deleteEnabled"] is False; print(x)')
@@ -121,8 +127,8 @@ pipeline:
                       chmod +x ./kubectl
                       sed "s#IMAGE_DIGEST#$image#g" k8s/development.yaml > ./development.rendered.yaml
                       ./kubectl apply -f ./development.rendered.yaml
-                      ./kubectl rollout status deployment/harness-lab-api -n development --timeout=180s
-                      actual=$(./kubectl get deployment harness-lab-api -n development -o jsonpath='{.spec.template.spec.containers[0].image}')
+                      ./kubectl rollout status deployment/harness-lab-api -n "$namespace" --timeout=180s
+                      actual=$(./kubectl get deployment harness-lab-api -n "$namespace" -o jsonpath='{.spec.template.spec.containers[0].image}')
                       test "$actual" = "$image"
-                      ./kubectl get pods -n development -l app=harness-lab-api
-                      echo "Deployed $image to development"
+                      ./kubectl get pods -n "$namespace" -l app=harness-lab-api
+                      echo "Deployed $image to $namespace"

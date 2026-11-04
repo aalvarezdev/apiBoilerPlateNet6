@@ -1,0 +1,33 @@
+trigger:
+  name: Push a Development
+  identifier: push_development
+  enabled: true
+  encryptedWebhookSecretIdentifier: ""
+  orgIdentifier: default
+  projectIdentifier: harness_lab
+  pipelineIdentifier: api_ci_inicial
+  source:
+    type: Webhook
+    spec:
+      type: Github
+      spec:
+        type: Push
+        spec:
+          connectorRef: github_api_boilerplate
+          autoAbortPreviousExecutions: false
+          payloadConditions:
+            - key: targetBranch
+              operator: Equals
+              value: Development
+          headerConditions: []
+          jexlCondition: ""
+  inputYaml: |
+    pipeline:
+      identifier: api_ci_inicial
+      properties:
+        ci:
+          codebase:
+            build:
+              type: commitSha
+              spec:
+                commitSha: <+trigger.commitSha>
