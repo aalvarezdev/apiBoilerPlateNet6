@@ -1,0 +1,14 @@
+inputSet:
+  name: Main verificado
+  identifier: main_verificado
+  orgIdentifier: default
+  projectIdentifier: harness_lab
+  pipeline:
+    identifier: api_ci_inicial
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: main

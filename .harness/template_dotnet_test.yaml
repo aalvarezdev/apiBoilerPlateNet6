@@ -1,0 +1,22 @@
+template:
+  name: Dotnet restore build test
+  identifier: dotnet_restore_build_test
+  versionLabel: "1.0.0"
+  type: Step
+  orgIdentifier: default
+  projectIdentifier: harness_lab
+  tags: {}
+  spec:
+    type: Run
+    spec:
+      shell: Bash
+      command: |-
+        set -euo pipefail
+        if ! dotnet --list-sdks | grep -q '^10\.'; then
+          curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 10.0
+          export PATH="$HOME/.dotnet:$PATH"
+        fi
+        dotnet restore Backend.sln
+        dotnet build Backend.sln -c Release --no-restore
+        dotnet test Backend.sln -c Release --no-build --no-restore
+    timeout: 20m
