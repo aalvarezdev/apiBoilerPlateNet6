@@ -28,6 +28,10 @@ docker run --rm -p 8080:8080 api-boilerplate:local
 
 The endpoint is available at `http://localhost:8080/api/dummies`.
 
+## CI artifact
+
+Harness CI builds and tests `Backend.sln`, then publishes `Backend.Api` to Azure Container Registry using the full Git commit SHA as its image tag. A successful run verifies the registry digest and locks that image against updates and deletion. Deployment should reference the verified digest so every environment uses the same build.
+
 ## Architecture
 
 Backend.Application - Class Library
